@@ -3,12 +3,10 @@
 // #![plugin(application_main_fn)]
 
 #[macro_use] extern crate log;
-
 use task;
  
 #[derive(Debug)]
 pub enum MemuseError {
-    InvalidTid,
     InvalidMemtype,
     TaskNotExist,
 }
