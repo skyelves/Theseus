@@ -1,0 +1,19 @@
+[package]
+name = "memuse_test"
+version = "0.1.0"
+edition = "2018"
+authors = ["Ke Wang <ke.wang.kw754@yale.edu>"]
+build = "../../build.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+[dependencies.log]
+version = "0.4.8"
+
+[dependencies.terminal_print]
+path = "../../kernel/terminal_print"
+
+[dependencies.memuse]
+path = "../../kernel/memuse"
