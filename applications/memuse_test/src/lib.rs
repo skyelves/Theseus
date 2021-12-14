@@ -25,20 +25,26 @@ fn recursive(depth: usize){
 
 pub fn main() -> isize {
         let mut tid = getpid();
-        let mut v = vec![1, 2, 3];
+        let mut res;
+        let mut res1;
 
         let mut mem_type = memuse::MemType::Heap;
         println!("tid:{:?}, mem_type:{:?}", tid, mem_type);
-        let mut res = mymemuse(tid, mem_type);
-        println!("memuse result: {:?}", res);
+        res = mymemuse(tid, mem_type);
+
+        let mut v = vec![0;20];
+        
+        tid = getpid();
+        mem_type = memuse::MemType::Heap;
+        res1 = mymemuse(tid, mem_type);
+        println!("memuse result: {:?}", &res);
+        println!("memuse result: {:?}", &res1);
 
         tid = getpid();
         mem_type = memuse::MemType::Heap;
         println!("tid:{:?}, mem_type:{:?}", tid, &mem_type);
         res = mymemuse(tid, mem_type);
         println!("memuse result: {:?}", &res);
-
-        v.push(4);
 
         tid = getpid();
         mem_type = memuse::MemType::Heap;
