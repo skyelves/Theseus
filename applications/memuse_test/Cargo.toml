@@ -17,3 +17,6 @@ path = "../../kernel/terminal_print"
 
 [dependencies.memuse]
 path = "../../kernel/memuse"
+
+[dependencies.bm]
+path = "../bm"

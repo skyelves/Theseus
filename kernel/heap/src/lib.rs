@@ -5,17 +5,23 @@
 #![feature(allocator_api)]
 #![no_std]
 
+#[macro_use] extern crate log;
+
 extern crate alloc;
 extern crate irq_safety; 
 extern crate spin;
 extern crate memory;
 extern crate kernel_config;
 extern crate block_allocator;
+extern crate task;
+extern crate memuse;
+
+use core::{borrow::BorrowMut, ops::DerefMut};
 
 use alloc::alloc::{GlobalAlloc, Layout};
 use memory::EntryFlags;
 use kernel_config::memory::{KERNEL_HEAP_START, KERNEL_HEAP_INITIAL_SIZE};
-use irq_safety::MutexIrqSafe;
+use irq_safety::{MutexIrqSafe, MutexIrqSafeGuard};
 use spin::Once;
 use alloc::boxed::Box;
 use block_allocator::FixedSizeBlockAllocator;
@@ -71,9 +77,64 @@ impl Heap {
     }
 }
 
+fn increase_heap(layout: & Layout){
+    let curr_task = task::get_my_current_task();
+    // let tid = task::get_my_current_task_id();
+    // let curr_task = task::get_task(tid);
+    let mut heap_mem = match curr_task {
+        Some(a) => a.heap_mem.lock(),
+        None => return,
+    };
+    let heap_mem = heap_mem.deref_mut();
+    // *heap_mem += layout.size();
+    let mut size = 0;
+    let align = layout.align();
+    if align <= 8 && align <= layout.size() {
+        size = size + layout.size();
+    } else {
+        size += ((layout.size() - 1) / align) * align + align;
+    }
+    *heap_mem += &size;
+    let tid = task::get_my_current_task_id();
+    match tid {
+        Some(a) => if a >= 14 {
+            info!("task {:?} alloc mem_size: {:?}", a, &size);
+        },
+        None => return
+    }
+}
+
+fn decrease_heap(layout: & Layout){
+    let curr_task = task::get_my_current_task();
+    // let pid = task::get_my_current_task_id();
+    // let curr_task = task::get_task(pid);
+    let mut heap_mem = match curr_task {
+        Some(a) => a.heap_mem.lock(),
+        None => return,
+    };
+    let heap_mem = heap_mem.deref_mut();
+    // *heap_mem += layout.size();
+    let mut size = 0;
+    let align = layout.align();
+    if align <= 8 && align <= layout.size() {
+        size = size + layout.size();
+    } else {
+        size += ((layout.size() - 1) / align) * align + align;
+    }
+    *heap_mem -= &size;
+    let tid = task::get_my_current_task_id();
+    match tid {
+        Some(a) => if a >= 14 {
+            info!("task {:?} dealloc mem_size: {:?}", a, &size);
+        },
+        None => return
+    }
+}
+
 unsafe impl GlobalAlloc for Heap {
 
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        increase_heap(&layout);
         match DEFAULT_ALLOCATOR.get() {
             Some(allocator) => {
                 allocator.alloc(layout)
@@ -85,6 +146,7 @@ unsafe impl GlobalAlloc for Heap {
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+        decrease_heap(&layout);
         if (ptr as usize) < INITIAL_HEAP_END_ADDR {
             self.initial_allocator.lock().deallocate(ptr, layout);
         }

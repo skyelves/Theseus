@@ -287,6 +287,8 @@ pub struct Task {
     /// This is not public because it permits interior mutability.
     inner: MutexIrqSafe<TaskInner>,
 
+    pub heap_mem: MutexIrqSafe<usize>,
+
     /// The unique identifier of this Task.
     pub id: usize,
     /// The simple name of this Task.
@@ -419,6 +421,7 @@ impl Task {
                 env,
                 restart_info: None,
             }),
+            heap_mem: MutexIrqSafe::new(0),
             id: task_id,
             name: format!("task_{}", task_id),
             runstate: AtomicCell::new(RunState::Initing),
@@ -499,6 +502,15 @@ impl Task {
         where F: FnOnce(&Stack) -> R
     {
         func(&self.inner.lock().kstack)
+    }
+
+    pub fn stack_size(&self) -> usize{
+        let size = &self.inner.lock().kstack.stack_size();
+        *size
+        // let top = &self.inner.lock().kstack.top_usable().value();
+        // let bottom =  &self.inner.lock().saved_sp;
+        // info!("top:{:?}, bottom:{:?}", top, bottom);
+        // top - bottom
     }
 
     /// Returns a mutable reference to this `Task`'s inner state. 

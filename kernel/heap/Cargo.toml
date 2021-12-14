@@ -22,3 +22,9 @@ path = "../kernel_config"
 
 [dependencies.block_allocator]
 path = "../block_allocator"
+
+[dependencies.memuse]
+path = "../memuse"
+
+[dependencies.task]
+path = "../task"

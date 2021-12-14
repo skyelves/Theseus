@@ -87,6 +87,10 @@ impl DerefMut for Stack {
 }
 
 impl Stack {
+
+    pub fn stack_size(&self) -> usize{
+        self.pages.size_in_bytes()
+    }
     /// Returns the address just beyond the top of this stack, 
     /// which is necessary for some hardware registers to use. 
     /// 
